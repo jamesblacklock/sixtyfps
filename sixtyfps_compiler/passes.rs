@@ -80,7 +80,7 @@ pub async fn run_passes(
 
     embed_images::embed_images(root_component, compiler_config.embed_resources, diag);
 
-    inlining::inline(doc);
+    inlining::inline(doc, inlining::InlineSelection::InlineAllComponents);
     focus_item::resolve_element_reference_in_set_focus_calls(root_component, diag);
     focus_item::determine_initial_focus_item(root_component, diag);
     focus_item::erase_forward_focus_properties(root_component);
