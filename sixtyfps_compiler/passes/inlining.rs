@@ -37,6 +37,7 @@ pub fn inline(doc: &Document, inline_selection: InlineSelection) {
                     InlineSelection::InlineOnlyRequiredComponents
                         if component_requires_inlining(&c) =>
                     {
+                        c.requires_inlining.set(true);
                         true
                     }
                     _ => false,
@@ -287,7 +288,18 @@ fn component_requires_inlining(component: &Rc<Component>) -> bool {
     }
 
     let root_element = &component.root_element;
-    super::flickable::is_flickable_element(root_element)
+    if super::flickable::is_flickable_element(root_element)
         || super::focus_item::get_explicit_forward_focus(root_element).is_some()
         || super::lower_layout::is_layout_element(root_element)
+    {
+        return true;
+    }
+
+    // For now any implicit bindings to the parent geometry require inlining, but this should
+    // be changed to instead create the bindings on the use-site instead.
+    if super::default_geometry::element_requires_parent_for_geometry(root_element) {
+        return true;
+    }
+
+    false
 }
