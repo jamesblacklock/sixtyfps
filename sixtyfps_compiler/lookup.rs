@@ -471,6 +471,7 @@ impl LookupObject for BuiltinFunctionLookup {
             .or_else(|| f("asin", BuiltinFunctionReference(BuiltinFunction::ASin, sl())))
             .or_else(|| f("acos", BuiltinFunctionReference(BuiltinFunction::ACos, sl())))
             .or_else(|| f("atan", BuiltinFunctionReference(BuiltinFunction::ATan, sl())))
+            .or_else(|| f("str-format", BuiltinFunctionReference(BuiltinFunction::StrFormat, sl())))
     }
 }
 

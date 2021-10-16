@@ -634,6 +634,33 @@ impl Expression {
                         .collect()
                 }
             }
+            Type::VariadicFunction { args, .. } => {
+                if arguments.len() < args.len() {
+                    ctx.diag.push_error(
+                        format!(
+                            "The function expects at least {} arguments, but only {} are provided",
+                            args.len(),
+                            arguments.len()
+                        ),
+                        &node,
+                    );
+                    arguments.into_iter().map(|x| x.0).collect()
+                } else {
+                    let t = arguments
+                        .into_iter()
+                        .enumerate()
+                        .map(|(i, (e, node))| {
+                            if i < args.len() {
+                                e.maybe_convert_to(args[i].clone(), &node, &mut ctx.diag)
+                            } else {
+                                e
+                            }
+                        })
+                        .collect();
+                    println!("{:?}", t);
+                    t
+                }
+            }
             _ => {
                 ctx.diag.push_error("The expression is not a function".into(), &node);
                 arguments.into_iter().map(|x| x.0).collect()

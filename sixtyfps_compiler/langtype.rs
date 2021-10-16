@@ -41,6 +41,10 @@ pub enum Type {
         return_type: Box<Type>,
         args: Vec<Type>,
     },
+    VariadicFunction {
+        return_type: Box<Type>,
+        args: Vec<Type>,
+    },
 
     // Other property types:
     Float32,
@@ -93,6 +97,9 @@ impl core::cmp::PartialEq for Type {
             }
             Type::Function { return_type: lhs_rt, args: lhs_args } => {
                 matches!(other, Type::Function { return_type: rhs_rt, args: rhs_args } if lhs_rt == rhs_rt && lhs_args == rhs_args)
+            }
+            Type::VariadicFunction { return_type: lhs_rt, args: lhs_args } => {
+                matches!(other, Type::VariadicFunction { return_type: rhs_rt, args: rhs_args } if lhs_rt == rhs_rt && lhs_args == rhs_args)
             }
             Type::Float32 => matches!(other, Type::Float32),
             Type::Int32 => matches!(other, Type::Int32),
@@ -157,6 +164,13 @@ impl Display for Type {
                     write!(f, "{}", arg)?;
                 }
                 write!(f, ") -> {}", return_type)
+            }
+            Type::VariadicFunction { return_type, args } => {
+                write!(f, "function(")?;
+                for (i, arg) in args.iter().enumerate() {
+                    write!(f, "{},", arg)?;
+                }
+                write!(f, "...) -> {}", return_type)
             }
             Type::Float32 => write!(f, "float"),
             Type::Int32 => write!(f, "int"),
@@ -477,6 +491,7 @@ impl Type {
             Type::Native(_) => None,
             Type::Callback { .. } => None,
             Type::Function { .. } => None,
+            Type::VariadicFunction { .. } => None,
             Type::Float32 => None,
             Type::Int32 => None,
             Type::String => None,

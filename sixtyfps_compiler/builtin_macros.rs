@@ -186,6 +186,7 @@ fn to_debug_string(
         | Type::Native(_)
         | Type::Callback { .. }
         | Type::Function { .. }
+        | Type::VariadicFunction { .. }
         | Type::ElementReference
         | Type::LayoutCache
         | Type::Model

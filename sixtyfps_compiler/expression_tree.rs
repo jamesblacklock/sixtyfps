@@ -46,6 +46,7 @@ pub enum BuiltinFunction {
     ColorDarker,
     ImageSize,
     Rgb,
+    StrFormat,
     ImplicitLayoutInfo(Orientation),
     RegisterCustomFontByPath,
     RegisterCustomFontByMemory,
@@ -129,6 +130,9 @@ impl BuiltinFunction {
                 return_type: Box::new(Type::Color),
                 args: vec![Type::Int32, Type::Int32, Type::Int32, Type::Float32],
             },
+            BuiltinFunction::StrFormat => {
+                Type::VariadicFunction { return_type: Box::new(Type::String), args: vec![Type::String] }
+            }
             BuiltinFunction::RegisterCustomFontByPath => {
                 Type::Function { return_type: Box::new(Type::Void), args: vec![Type::String] }
             }
@@ -169,6 +173,7 @@ impl BuiltinFunction {
             #[cfg(target_arch = "wasm32")]
             BuiltinFunction::ImageSize => false,
             BuiltinFunction::Rgb => true,
+            BuiltinFunction::StrFormat => true,
             BuiltinFunction::ImplicitLayoutInfo(_) => false,
             BuiltinFunction::RegisterCustomFontByPath
             | BuiltinFunction::RegisterCustomFontByMemory => false,
@@ -990,6 +995,7 @@ impl Expression {
             | Type::Native(_)
             | Type::Callback { .. }
             | Type::Function { .. }
+            | Type::VariadicFunction { .. }
             | Type::Void
             | Type::InferredProperty
             | Type::InferredCallback

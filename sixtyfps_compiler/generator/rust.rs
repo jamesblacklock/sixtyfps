@@ -1238,7 +1238,6 @@ fn compile_expression(expr: &Expression, component: &Rc<Component>) -> TokenStre
             BuiltinFunction::ImageSize => {
                 quote!((|x: Image| -> Size { x.size() }))
             }
-
             BuiltinFunction::Rgb => {
                 quote!((|r: i32, g: i32, b: i32, a: f32| {
                     let r: u8 = r.max(0).min(255) as u8;
@@ -1247,6 +1246,9 @@ fn compile_expression(expr: &Expression, component: &Rc<Component>) -> TokenStre
                     let a: u8 = (255. * a).max(0.).min(255.) as u8;
                     sixtyfps::re_exports::Color::from_argb_u8(a, r, g, b)
                 }))
+            }
+            BuiltinFunction::StrFormat => {
+                panic!("internal error: BuiltinFunction::RegisterCustomFontByMemory can only be compiled as part of a FunctionCall expression")
             }
             BuiltinFunction::RegisterCustomFontByPath => {
                 panic!("internal error: BuiltinFunction::RegisterCustomFontByPath can only be compiled as part of a FunctionCall expression")
@@ -1387,6 +1389,18 @@ fn compile_expression(expr: &Expression, component: &Rc<Component>) -> TokenStre
                         panic!("internal error: argument to RegisterCustomFontByMemory must be a number")
                     }
                 }
+                Expression::BuiltinFunctionReference(BuiltinFunction::StrFormat, _) => {
+                    if arguments.len() < 1 {
+                        panic!("internal error: incorrect argument count to StrFormat call");
+                    }
+
+                    if let Expression::StringLiteral(ref fmt) = arguments[0] {
+                        let a = arguments.iter().skip(1).map(|a| compile_expression(a, component));
+                        quote!((SharedString::from(format!(#fmt, #(#a),*))))
+                    } else {
+                        panic!("internal error: the first argument to StrFormat must be a string literal");
+                    }
+                }
                 _ => {
                     let f = compile_expression(function, component);
                     let a = arguments.iter().map(|a| compile_expression(a, component));
@@ -1402,6 +1416,15 @@ fn compile_expression(expr: &Expression, component: &Rc<Component>) -> TokenStre
                             quote! { #f.call(&(#((#a)#cast,)*).into())}
                         }
                         Type::Function {args, .. } => {
+                            let cast = args.iter().map(|ty| match ty {
+                                Type::Bool => quote!(as bool),
+                                Type::Int32 => quote!(as i32),
+                                Type::Float32 => quote!(as f32),
+                                _ => quote!(.clone()),
+                            });
+                            quote! { #f(#((#a) #cast),*)}
+                        }
+                        Type::VariadicFunction {args, .. } => {
                             let cast = args.iter().map(|ty| match ty {
                                 Type::Bool => quote!(as bool),
                                 Type::Int32 => quote!(as i32),
