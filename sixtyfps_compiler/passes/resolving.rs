@@ -657,7 +657,6 @@ impl Expression {
                             }
                         })
                         .collect();
-                    println!("{:?}", t);
                     t
                 }
             }
